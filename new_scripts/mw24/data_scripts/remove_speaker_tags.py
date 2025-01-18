@@ -1,21 +1,8 @@
 import os
 import json
-import argparse
 from tqdm import tqdm
 
-def arg_parse():
-    parser = argparse.ArgumentParser(description='Modify the LLM input file for zero shot open ended generation.')
-    parser.add_argument('--input_file', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/experiments/NecessaryFiles/LLM_input_sentences_UA_PN.txt', help='input file')
-    # parser.add_argument('--output_file', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/sandbox/LLM_input_sentences_rem_user_tag.txt', help='output file')
-    args = parser.parse_args()
-    return args
-
-def main():
-    args = arg_parse()
-    input_file = args.input_file
-    # output_file = args.output_file
-    output_file = input_file.replace('.txt', '_TN.txt')
-
+def remove_speaker_tags(input_file, output_file):
     with open(input_file, 'r') as f:
         lines = f.readlines()
     
@@ -24,7 +11,7 @@ def main():
     for line in tqdm(lines):
         read_line = json.loads(line)[0]
 
-        # remove User: tag
+        # remove User: and Agent: tags
         read_line = read_line.replace('User: ', '')
         read_line = read_line.replace('Agent: ', '')
         
@@ -32,8 +19,19 @@ def main():
 
     # write to output file
     with open(output_file, 'w') as f:
-        f.write('\n'.join(processed_lines)+'\n')
+        f.write('\n'.join(processed_lines) + '\n')
+
+    return output_file
 
 if __name__ == '__main__':
-    main()
-    
+    import argparse
+
+    def arg_parse():
+        parser = argparse.ArgumentParser(description='Modify the LLM input file for zero shot open ended generation.')
+        parser.add_argument('--input_file', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/experiments/NecessaryFiles/LLM_input_sentences_UA_PN.txt', help='input file')
+        parser.add_argument('--output_file', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/experiments/NecessaryFiles/LLM_input_sentences_UA_PN_TN.txt', help='output file')
+        args = parser.parse_args()
+        return args
+
+    args = arg_parse()
+    remove_speaker_tags(args.input_file, args.output_file)

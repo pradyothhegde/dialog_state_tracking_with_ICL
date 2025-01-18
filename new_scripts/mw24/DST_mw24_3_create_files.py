@@ -2,6 +2,7 @@
 
 import os
 import json
+from time import sleep
 import tqdm
 import ast
 import argparse
@@ -14,7 +15,9 @@ from data_scripts.get_out_file_name import get_out_file_name
 from data_scripts.create_TSV_from_json import create_TSV_from_json
 from data_scripts.compute_save_sentence_embedding import compute_save_sentence_embedding
 from data_scripts.check_context_token_limit import check_context_token_limit
-
+from data_scripts.remove_speaker_tags import remove_speaker_tags
+from data_scripts.operate_slot_placeholders import operate_slot_placeholders  # Import the function
+from data_scripts.sort_slot_keys import sort_and_shuffle_slot_keys  # Import the function
 
 
 # arguments 
@@ -52,11 +55,14 @@ def main():
 
     # get the output file name
     output_file_name = get_out_file_name(args)
-    print(output_file_name)
+    output_folder_path = os.path.join(args.output_folder_path, output_file_name)
+    output_file_name = os.path.join(output_folder_path, f"{output_file_name}.txt")
+    print(output_folder_path)
+
     # if output path does not exists, create it
-    if not os.path.exists(args.output_folder_path):
-        os.makedirs(args.output_folder_path)
-    output_file_name = os.path.join(args.output_folder_path, f"{output_file_name}.txt")
+    if not os.path.exists(output_folder_path):
+        os.makedirs(output_folder_path)
+    
     # breakpoint()
 
     # input file paths
@@ -65,8 +71,8 @@ def main():
     input_val_data_path = os.path.join(args.data_folder_path, 'mw24_DST_valid.json')
 
     # TSV file names
-    test_TSV_file_path = os.path.join(args.output_folder_path, f"MW24_test_{args.dialog_history}_{args.punct}.tsv")
-    train_TSV_file_path = os.path.join(args.output_folder_path, f"MW24_train_{args.dialog_history}_{args.punct}.tsv")
+    test_TSV_file_path = os.path.join(output_folder_path, f"MW24_test_{args.dialog_history}_{args.punct}.tsv")
+    train_TSV_file_path = os.path.join(output_folder_path, f"MW24_train_{args.dialog_history}_{args.punct}.tsv")
     
     # create TSV files      # The punctuations are dealt here. 
     # create_TSV_from_json(input_test_data_path, test_TSV_file_path, args)
@@ -75,8 +81,13 @@ def main():
     # create numpy files
     # test_numpy_file_path = compute_save_sentence_embedding(test_TSV_file_path)
     # train_numpy_file_path = compute_save_sentence_embedding(train_TSV_file_path)
-    test_numpy_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_test_U_O.npy'
-    train_numpy_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_train_U_O.npy'
+
+    # Temporary paths
+    test_numpy_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_test_U_O.npy'
+    train_numpy_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_train_U_O.npy'
+    test_TSV_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_test_U_O.tsv'
+    train_TSV_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_train_U_O.tsv'
+
 
     # Load test and train numpy files
     test_numpy = np.load(test_numpy_file_path)
@@ -162,42 +173,45 @@ def main():
         all_nearest_sentences_list = [sentence.replace('  ', ' ') for sentence in all_nearest_sentences_list]
 
         
-        # if i == 10:  # For debugging limit to 10 iterations
-        #     break
+        if i == 20:  # For debugging limit to 10 iterations
+            break
 
     # Write each sentence to a new line in the file
         with open(output_file_name, 'a') as nn_write_file:
             nn_write_file.write(json.dumps(all_nearest_sentences_list) + '\n')
 
+    print("Written to the file successfully")
 
+    sleep(10)
     # TODO:
     # Do th post processing here. 
     # 1. Removing the tags.
     if args.speaker_tag == 'N':
         # Remove User: Agent: speaker tags.
-        # remove_speaker_tags()
-        pass
+        # remove_speaker_tags
+        processed_file_path = remove_speaker_tags(output_file_name, output_file_name)
+    print("speaker_tags processed")
+    sleep(10)
 
     # 2. slot_placeholder.
     if args.slot_placeholder != 'not mentioned':
         # replace the slot placeholder with argument value.
         # operate_slot_placeholder()
-        pass
+        slot_placeholder_output_file = operate_slot_placeholders(output_file_name, args.slot_placeholder, output_file_name)
+        print(f"Processed file with slot placeholders saved at: {slot_placeholder_output_file}")
+    print("slot placeholders processed")
+    sleep(10)
     
     # 3. slot_key_sort.
-    if args.slot_key_sort == 'Y':
+    if args.slot_key_sort == 'Y' or args.slot_key_sort.isdigit():
         # sort the slots.
         # sort_slot_keys()
-        pass
-
-
-
+        sorted_shuffled_output_file = sort_and_shuffle_slot_keys(output_file_name, args.slot_key_sort, output_file_name)
+        print(f"Processed file with sorted and shuffled slot keys saved at: {sorted_shuffled_output_file}")
+    print("slot keys processed")
+    sleep(10)
 
     print("Written to the file successfully")
-
-
-
-    # Add User: Agent: tag to the conversation by default and remove it later checking the argument.
 
 if __name__ == "__main__":
     main()
