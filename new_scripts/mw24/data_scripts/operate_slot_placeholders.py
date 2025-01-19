@@ -35,7 +35,11 @@ def operate_slot_placeholders(input_file, slot_placeholder, output_file):
                     each_domain_slots_original = slot_dicts_original[domain]
                     for slot_key, slot_val in each_domain_slots_original.items():
                         if slot_val == 'not mentioned':
-                            if slot_placeholder != 'not mentioned':
+                            if slot_placeholder == 'omit':
+                                continue
+                            elif slot_placeholder == 'none':
+                                slot_val = ''
+                            elif slot_placeholder != 'not mentioned':
                                 slot_val = slot_placeholder
                         each_domain_slots_new[slot_key] = slot_val
                     new_slot_dict[domain] = each_domain_slots_new
@@ -44,7 +48,7 @@ def operate_slot_placeholders(input_file, slot_placeholder, output_file):
                 append_slots_str = slot_dicts_str
         
             one_utterance_with_slots = prefix_original + "Slots: " + append_slots_str
-            new_line += one_utterance_with_slots 
+            new_line += one_utterance_with_slots
         processed_lines.append(json.dumps([new_line]))
 
     with open(output_file, 'w') as f:

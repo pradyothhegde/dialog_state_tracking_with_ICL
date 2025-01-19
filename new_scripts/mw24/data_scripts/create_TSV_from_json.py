@@ -39,14 +39,16 @@ def create_TSV_from_json(json_file_path, tsv_file_path, args):
                     # punctuation to user utterance operation
                     if punctuation == 'N':      # No punctuation
                         user_utterance = punct_processor.remove_punctuation(user_utterance)
+                        user_utterance = user_utterance.strip()
                         # pass
                     elif punctuation == 'M':    # Model punctuation
                         user_utterance = punct_processor.remove_punctuation(user_utterance)
                         user_utterance = punct_processor.add_punctuation(user_utterance)
                         user_utterance = punct_processor.clean_text(user_utterance)
+                        user_utterance = user_utterance.strip()
                         # pass
 
-                    conv_history = conv_history + user_utterance         # --- is to indicate turn change
+                    conv_history = conv_history + user_utterance.strip()         # --- is to indicate turn change
                     # breakpoint()
                     pass 
                 elif identifier % 4 == 1:
@@ -74,11 +76,13 @@ def create_TSV_from_json(json_file_path, tsv_file_path, args):
                     # punctuation to agent utterance operation
                     if punctuation == 'N':    # No punctuation
                         agent_utterance = punct_processor.remove_punctuation(agent_utterance)
+                        agent_utterance = agent_utterance.strip()
                         # pass
                     elif punctuation == 'M':    # Model punctuation
                         agent_utterance = punct_processor.remove_punctuation(agent_utterance)
                         agent_utterance = punct_processor.add_punctuation(agent_utterance)
                         agent_utterance = punct_processor.clean_text(agent_utterance)
+                        agent_utterance = agent_utterance.strip()
                         # pass
                     # print(agent_utterance)
                     writing_string = filename + '\t' + conv_history.strip() + '\t' + domain_write + slots_write + '\n'
@@ -92,7 +96,7 @@ def create_TSV_from_json(json_file_path, tsv_file_path, args):
 
                     # Add agent utterance to conversation history if dialog_side is UA
                     if dialog_side == 'UA': 
-                        conv_history = conv_history + ' ' + '---' + agent_utterance 
+                        conv_history = conv_history + '---' + agent_utterance.strip() 
                     
                     conv_history = conv_history + '---'          # --- is to indicate turn change
                     conv_history.replace('  ', ' ')     # remove double spaces, if any.

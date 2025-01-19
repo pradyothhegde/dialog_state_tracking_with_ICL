@@ -29,6 +29,8 @@ def get_out_file_name(args):
         slot_placeholder_ret = "PH-none"
     elif slot_placeholder == "omit":
         slot_placeholder_ret = "PH-omit"
+    elif slot_placeholder == "empty":
+        slot_placeholder_ret = "PH-empty"
 
     if slot_key_sort == "Y":
         slot_key_sort_ret = "SO"
