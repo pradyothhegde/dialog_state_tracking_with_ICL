@@ -49,3 +49,14 @@ def get_out_file_name(args):
     file_name = f"{dataset}_{punct_ret}_{speaker_tag_ret}_{slot_placeholder_ret}_{slot_key_sort_ret}_{sentence_embedding_model_ret}_NN-{NNcount}_{dialog_history}_{decoding}"
 
     return file_name
+
+# Write a detailed description of the function here:
+# Dataset = "MW24"
+# Punct = original - "O" | no punctuation - "N" | model punctuation - "M"
+# Speaker_tag = "Y" | "N"
+# Slot_placeholder = "not mentioned" | "N.A." | "none" | deleting the slot key if there is no placeholder - "omit" | empty string - "empty"
+# Slot_key_sort = "Y" | "N" | seed - "1" | "2"
+# Sentence_embedding_model = "sentence-transformers/LaBSE" 
+# NNcount = 10
+# Dialog_history = "Y" | "N"
+# Decoding = slot key and value given domain - "SKV" | slot value given slot key - "SV"

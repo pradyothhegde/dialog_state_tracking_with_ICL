@@ -1,4 +1,4 @@
-# export CUDA_VISIBLE_DEVICES=$(free-gpus.sh 1); export HF_HUB_OFFLINE=1; export HF_DATASETS_OFFLINE=1; export TRANSFORMERS_OFFLINE=1; export HF_EVALUATE_OFFLINE=1; python DST_mw24_3_create_files.py
+# export CUDA_VISIBLE_DEVICES=$(free-gpus.sh 1); export HF_HUB_OFFLINE=1; export HF_DATASETS_OFFLINE=1; export TRANSFORMERS_OFFLINE=1; export HF_EVALUATE_OFFLINE=1; /homes/kazi/hegde/miniconda3/envs/dialog/bin/python /mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/new_scripts/mw24/DST_mw24_3_create_files.py
 
 import os
 import json
@@ -24,23 +24,22 @@ from data_scripts.sort_slot_keys import sort_and_shuffle_slot_keys  # Import the
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_folder_path", type=str, default="/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4")
-    parser.add_argument("--output_folder_path", type=str, default="/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data")
-    parser.add_argument("--numpy_folder_path", type=str, default="/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/numpy_files")
+    parser.add_argument("--output_folder_path", type=str, default="/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MW24/baseline")
     parser.add_argument("--dataset", type=str, default="MW24")
     parser.add_argument("--LLM_model_tokenizer", type=str, default="allenai/OLMo-7B-Instruct", help="allenai/OLMo-7B-Instruct | ")
     parser.add_argument("--LLM_model_tokenizer_limit", type=int, default=2048, help="Maximum window length of tokenizer - 2048 | ")
 
     parser.add_argument("--punct", type=str, default="O", help="Original - O | No punctuation - N | Model punctuation - M")
     parser.add_argument("--speaker_tag", type=str, default="Y", help="Y or N")
-    parser.add_argument("--slot_placeholder", type=str, default="not mentioned", help="not mentioned | N.A. | none | empty | omit") 
-    parser.add_argument("--slot_key_sort", type=str, default="Y", help="Y | N | seed number")
+    parser.add_argument("--slot_placeholder", type=str, default="empty", help="not mentioned | N.A. | none | empty("") | omit") 
+    parser.add_argument("--slot_key_sort", type=str, default="N", help="Y | N | seed number")
 
     parser.add_argument("--sentence_embedding_model", type=str, default="sentence-transformers/LaBSE", help="sentence-transformers/LaBSE - Labse | sergioburdisso/dialog2flow-single-bert-base - D2F ")
-    parser.add_argument("--NNcount", type=int, default=10, help="number of nearest neighbours to consider - 3 | 5 | 10")
+    parser.add_argument("--NNcount", type=int, default=3, help="number of nearest neighbours to consider - 3 | 5 | 10")
 
     parser.add_argument("--dialog_history", type=str, default="U", help="user -U | user agent - UA")
 
-    parser.add_argument("--decoding", type=str, default="SKV", help="slot key and value given domain (SKV) | slot value given slot key (SV)")
+    parser.add_argument("--decoding", type=str, default="SV", help="slot key and value given domain (SKV) | slot value given slot key (SV)")
 
     args = parser.parse_args()
     return args
@@ -76,20 +75,20 @@ def main():
     input_val_data_path = os.path.join(args.data_folder_path, 'mw24_DST_valid.json')
 
     # TSV file names
-    test_TSV_file_path = os.path.join(output_folder_path, f"MW24_test_{args.dialog_history}_{args.punct}.tsv")
-    train_TSV_file_path = os.path.join(output_folder_path, f"MW24_train_{args.dialog_history}_{args.punct}.tsv")
+    test_TSV_file_path = os.path.join(output_folder_path, f"MW24_test_{args.dialog_history}_{args.punct}P.tsv")
+    train_TSV_file_path = os.path.join(output_folder_path, f"MW24_train_{args.dialog_history}_{args.punct}P.tsv")
     
     # create TSV files      # The punctuations are dealt here. 
     create_TSV_from_json(input_test_data_path, test_TSV_file_path, args)
     create_TSV_from_json(input_train_data_path, train_TSV_file_path, args)
 
     # create numpy files
-    # test_numpy_file_path = compute_save_sentence_embedding(test_TSV_file_path)
-    # train_numpy_file_path = compute_save_sentence_embedding(train_TSV_file_path)
+    test_numpy_file_path = compute_save_sentence_embedding(test_TSV_file_path)
+    train_numpy_file_path = compute_save_sentence_embedding(train_TSV_file_path)
 
     # Temporary paths
-    test_numpy_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_test_U_O.npy'
-    train_numpy_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_train_U_O.npy'
+    # test_numpy_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_test_U_O.npy'
+    # train_numpy_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_train_U_O.npy'
     # test_TSV_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_test_U_O.tsv'
     # train_TSV_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_train_U_O.tsv'
 
@@ -107,8 +106,8 @@ def main():
     # Loop through test TSV and test embeddings
     for i, (test_embedding, test_line) in enumerate(tqdm.tqdm(zip(test_numpy, test_lines), total=len(test_lines))):
         # Loop through
-        if i == 20:  # For debugging limit to 10 iterations
-            break
+        # if i == 20:  # For debugging limit to 10 iterations
+        #     break
 
         all_nearest_sentences_list = []
         picked_train_file_lines = []
@@ -190,7 +189,6 @@ def main():
 
 
     sleep(5)
-    # TODO:
     # Do th post processing here. 
     # 1. Removing the tags.
     if args.speaker_tag == 'N':

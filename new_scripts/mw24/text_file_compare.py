@@ -1,3 +1,5 @@
+# The program compares two text files line by line and checks if the strings in each line are identical.
+
 # python text_file_compare.py /mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SU1_Labse_NN-10_U_SKV_back/MW24_OP_ST_PH-nm_SU1_Labse_NN-10_U_SKV.txt /mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SU1_Labse_NN-10_U_SKV/MW24_OP_ST_PH-nm_SU1_Labse_NN-10_U_SKV.txt
 
 import sys
@@ -49,3 +51,6 @@ if __name__ == "__main__":
            print("Files are identical.")
         else:
            print("Files are not identical.")
+
+
+# Write the program description here:

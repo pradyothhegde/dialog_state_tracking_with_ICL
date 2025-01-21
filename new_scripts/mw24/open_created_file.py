@@ -1,3 +1,5 @@
+# This script reads the created file and prints each demonstration in each test case and also prints the number of demonstrations in each test case.
+
 import os
 import argparse
 import ast

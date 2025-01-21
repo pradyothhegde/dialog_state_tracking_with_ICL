@@ -37,7 +37,7 @@ def operate_slot_placeholders(input_file, slot_placeholder, output_file):
                         if slot_val == 'not mentioned':
                             if slot_placeholder == 'omit':
                                 continue
-                            elif slot_placeholder == 'none':
+                            elif slot_placeholder == 'empty':
                                 slot_val = ''
                             elif slot_placeholder != 'not mentioned':
                                 slot_val = slot_placeholder
