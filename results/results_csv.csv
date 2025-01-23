@@ -1,0 +1,2 @@
+folder_name,file_name,joint_accuracy,slot_error_rate,slot_total_ref,slot_total_hyp,slot_f1,slot_precision,slot_recall
+baseline,MW24_OP_NST_PH-nm_SU_Labse_NN-10_UA_SKV.json,2.550189907759054,98.53738976650814,41843,37734,61.57809416795259,0.6493083161074875,0.5855459694572555
