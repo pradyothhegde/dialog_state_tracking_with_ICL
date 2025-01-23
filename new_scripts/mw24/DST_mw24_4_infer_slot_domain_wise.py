@@ -13,6 +13,7 @@ import platform
 
 from TODx import finding_test_labels
 from domain_infer_scipts.get_instruction_for_domain import get_instruction_for_domain
+from domain_infer_scipts.append_model_name import append_model_name
 
 a = torch.rand(1, 1).cuda()
 
@@ -32,6 +33,7 @@ def parse_args():
 # output config file
 config_string = '''
 Dataset = "MW24"
+Model = "OLMo-7B-Instruct" - O7BI| "Mistral-7B-Instruct-v0.3 - M7BI03"
 Punct = original - "O" | no punctuation - "N" | model punctuation - "M"
 Speaker_tag = "Y" | "N"
 Slot_placeholder = "not mentioned" | "N.A." | "none" | deleting the slot key if there is no placeholder - "omit" | empty string - "empty"
@@ -72,9 +74,13 @@ def main():
     output_folder_path = args.output_folder_path
 
     # Get basename of the input file without extension
-    output_folder_name = os.path.basename(args.input_file)
-    output_folder_name = os.path.splitext(output_folder_name)[0]
+    input_file_name = os.path.basename(args.input_file)
+    input_file_name = os.path.splitext(input_file_name)[0]
     # If there is "SV" in the output_folder_name, replace it with "SKV"
+    output_folder_name = input_file_name
+    output_folder_name = append_model_name(output_folder_name, args.model_name)
+    if "SV" in input_file_name:
+        output_folder_name = input_file_name.replace("SV", "SKV")
 
     # create the output folder if it does not exist. If it exists, print the message and exit
     output_folder_name = os.path.join(output_folder_path, output_folder_name)

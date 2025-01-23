@@ -1,0 +1,337 @@
+diff '--color=auto' -Naur MultiWOZ_Evaluation.head/evaluate.py MultiWOZ_Evaluation.workingcopy/evaluate.py
+--- MultiWOZ_Evaluation.head/evaluate.py	2022-10-31 17:10:29.177572561 -0700
++++ MultiWOZ_Evaluation.workingcopy/evaluate.py	2022-10-31 17:11:12.517805047 -0700
+@@ -12,28 +12,31 @@
+ 
+     parser = argparse.ArgumentParser()
+     parser.add_argument("-b", "--bleu", dest='bleu', action="store_true", default=False, help="If set, BLEU is evaluated.")
++    parser.add_argument("-d", "--dst", dest='dst', action="store_true", default=False, help="If set, dst is evaluated.")
+     parser.add_argument("-s", "--success", dest='success', action="store_true", default=False, help="If set, inform and success rates are evaluated.")
+-    parser.add_argument("-r", "--richness", dest='richness', action="store_true", default=False, help="If set, various lexical richness metrics are evaluated.")
+     parser.add_argument("-i", "--input", type=str, required=True, help="Input JSON file path.")
++    parser.add_argument("-r", "--richness", dest='richness', action="store_true", default=False, help="If set, various lexical richness metrics are evaluated.")
+     parser.add_argument("-o", "--output", type=str, default="evaluation_results.json", help="Output file path, here will be the final report.")
++    parser.add_argument("-g", "--golden", type=str, default="default", help="Golden file to score against.")
++     
+     args = parser.parse_args()
+ 
+-    if not args.bleu and not args.success and not args.richness:
+-        sys.stderr.write('error: Missing argument, at least one of -b, -s, and -r must be used!\n')
++    if not args.bleu and not args.success and not args.richness and not args.dst:
++        sys.stderr.write('error: Missing argument, at least one of -b, -d, -s, and -r must be used!\n')
+         parser.print_help()
+         sys.exit(1)
+ 
+     with open(args.input, 'r') as f:
+         input_data = json.load(f)
+ 
+-    e = Evaluator(args.bleu, args.success, args.richness)
++    e = Evaluator(args.bleu, args.success, args.richness, dst=args.dst, golden=args.golden)
+     results = e.evaluate(input_data)
+ 
+     for metric, values in results.items():
+         if values is not None:
+             print(f"====== {metric.upper()} ======")
+             for k, v in values.items():
+-                print(f"{k.ljust(15)}{v}")
++                print(f"{k.ljust(16)}{v}")
+             print("")
+ 
+     with open(args.output, 'w+') as f:
+diff '--color=auto' -Naur MultiWOZ_Evaluation.head/mwzeval/metrics.py MultiWOZ_Evaluation.workingcopy/mwzeval/metrics.py
+--- MultiWOZ_Evaluation.head/mwzeval/metrics.py	2022-10-31 17:10:29.313573290 -0700
++++ MultiWOZ_Evaluation.workingcopy/mwzeval/metrics.py	2022-10-31 17:11:35.981931146 -0700
+@@ -1,5 +1,6 @@
+ import sys
+ import math
++import json
+ 
+ from collections import Counter
+ from sacrebleu import corpus_bleu
+@@ -8,7 +9,7 @@
+ 
+ from mwzeval.utils import load_references
+ from mwzeval.database import MultiWOZVenueDatabase
+-from mwzeval.normalization import normalize_data
++from mwzeval.normalization import normalize_data, normalize_gold_states
+ 
+ from mwzeval.utils import has_domain_predictions, get_domain_estimates_from_state
+ from mwzeval.utils import has_state_predictions
+@@ -17,7 +18,7 @@
+ 
+ class Evaluator:
+ 
+-    def __init__(self, bleu : bool, success : bool, richness : bool, dst : bool = False):
++    def __init__(self, bleu : bool, success : bool, richness : bool, dst : bool = False, golden : str = ""):
+         self.bleu = bleu
+         self.success = success
+         self.richness = richness
+@@ -32,7 +33,8 @@
+             self.booked_domains = load_booked_domains()
+ 
+         if dst:
+-            self.gold_states = load_gold_states() 
++            self.gold_states = load_gold_states(golden)
++            normalize_gold_states(self.gold_states)
+ 
+     def evaluate(self, input_data):
+         normalize_data(input_data)
+@@ -175,8 +177,8 @@
+                 matching_venues = database.query(current_domain, state[current_domain]) if current_domain in state else []
+ 
+                 # Go through the venues returned by the API call matching the dialog state of the current turn and
+-                # use them as the list of possibly offered venues if any of the possibly offered venues from the 
+-                # previous dialog turn is *not* present in the current list of matching venues, i.e., if it is not their subset
++                # use them as the list of possibly offered venues if and only if any of them is *not* present in the
++                # list of possibly offered venues from the previous dialog turn
+                 if current_domain not in offered_venues or len(offered_venues[current_domain]) == 0:
+                     offered_venues[current_domain] = matching_venues
+                 else:
+@@ -255,7 +257,7 @@
+     return match, success
+ 
+ 
+-def get_dst(input_data, reference_states, fuzzy_ratio=95):
++def get_dst(input_data, reference_states, fuzzy_ratio=0.95):
+     """ Get dialog state tracking results: joint accuracy (exact state match), slot F1, precision and recall """
+     
+     def flatten(state_dict):
+@@ -269,27 +271,47 @@
+         hyp_k = hyp.keys()
+         ref_k = ref.keys()
+         if hyp_k != ref_k:
++            h = sorted([":".join(x) for x in hyp_k])
++            r = sorted([":".join(x) for x in ref_k])
++            print("keys no_match\n  hyp:", h, "\n  ref:", r)
+             return False
+         for k in ref_k:
+-            if fuzz.partial_ratio(hyp[k], ref[k]) <= fuzzy_ratio:
++            # if fuzz.partial_ratio(hyp[k], ref[k]) < fuzzy_ratio:          
++            if hyp[k] != ref[k]:
++                print("values no_match\n  hyp:", hyp[k], "\n  ref:", ref[k])
+                 return False
+         return True
+ 
+     def compare(hyp, ref):
+-        # tp ... those mentioned in both and matching
+-        # tn ... those not mentioned in both (this inflates results for slot acc., thus reporting F1)
+-        # fn ... those not mentioned in hyp but mentioned in ref
+-        # fp ... those mentioned in hyp but not mentioned in ref OR mentioned in hyp but not matching
+-        tp, fp, fn = 0, 0, 0
+-        for slot, value in hyp.items():
+-            if slot in ref and fuzz.partial_ratio(value, ref[slot]) > fuzzy_ratio:
+-                tp += 1
+-            else:
+-                fp += 1
+-        for slot, value in ref.items():
+-            if slot not in hyp or fuzz.partial_ratio(hyp[slot], value) <= fuzzy_ratio:
+-                fn += 1
+-        return tp, fp, fn
++        # Replace type tuple as string
++        hyps = set([("_".join(s), v) for s,v in hyp.items()])
++        refs = set([("_".join(s), v) for s,v in ref.items()])
++        corr = [x for x in refs if x in hyps]
++        remaining_refs = sorted([x for x in refs if x not in corr])
++        remaining_hyps = sorted([x for x in hyps if x not in corr])
++        sub_refs = []
++        sub_hyps = []
++        for r in remaining_refs:
++            matches = [h for h in remaining_hyps if r[0] == h[0]]
++            if matches:
++                h = matches[0]
++                sub_refs.append(r)
++                sub_hyps.append(h)
++                del remaining_hyps[remaining_hyps.index(h)]
++        refs_left = [r for r in remaining_refs if r not in sub_refs]
++        hyps_left = remaining_hyps
++        sub_errors = len(sub_refs)
++        ins_errors = len(hyps_left)
++        del_errors = len(refs_left)
++        print("refs", refs)
++        print("hyps", hyps)
++        print("sub_refs", sub_refs)
++        print("sub_hyps", sub_hyps)
++        print("errors", sub_errors, ins_errors, del_errors)
++        print("refs_left", refs_left)
++        print("hyps_left", hyps_left)
++        return sub_errors + ins_errors + del_errors
++
+ 
+     joint_match, slot_acc, slot_f1, slot_p, slot_r = 0, 0, 0, 0, 0
+ 
+@@ -297,31 +319,42 @@
+         sys.stderr.write('error: Missing state predictions!\n')
+ 
+     else:
+-        total_tp, total_fp, total_fn = 0, 0, 0
++        total_err = 0
++        total_ref = 0
++        total_hyp = 0
+         num_turns = 0
+         for dialog_id in input_data:
++            dialog_id_no_json = dialog_id.replace(".json", "")
+             for i, turn in enumerate(input_data[dialog_id]):
+-                ref = flatten(reference_states[dialog_id][i])
++                print("Dialog:", dialog_id, "TurnID", i)                
++                ref = flatten(reference_states[dialog_id_no_json][i])
+                 hyp = flatten(turn['state'])
+ 
+-                if is_matching(hyp, ref):
+-                    joint_match += 1
+-                
+-                tp, fp, fn = compare(hyp, ref)
+-                total_tp += tp
+-                total_fp += fp
+-                total_fn += fn
++                def _proc(k):
++                    d, s = k
++                    if s.startswith('book'):
++                        s = s[len('book'):]
++                    return d, s
+ 
++                ref = {_proc(k): v for k, v in ref.items()}
++                hyp = {_proc(k): v for k, v in hyp.items()}
++
++                if is_matching(hyp, ref):
++                    joint_match += 1                
++                total_err += compare(hyp, ref)
++                total_ref += len(ref.items())
++                total_hyp += len(hyp.items())
+                 num_turns += 1
+ 
+-        slot_p = total_tp / (total_tp + total_fp + 1e-10)
+-        slot_r = total_tp / (total_tp + total_fn + 1e-10)
+-        slot_f1 = 2 * slot_p * slot_r / (slot_p + slot_r + 1e-10) * 100
++        slot_e = 100.0 * (total_err) / (total_ref)
++        slot_p = 0
++        slot_r =  0
++        slot_f1 = 0
+         joint_match = joint_match / (num_turns + 1e-10) * 100
+ 
+     return {
+         'joint_accuracy'   : joint_match,
+-        'slot_f1'          : slot_f1,
+-        'slot_precision'   : slot_p,
+-        'slot_recall'      : slot_r
++        'slot_error_rate' : slot_e,
++        'slot_total_ref': total_ref,
++        'slot_total_hyp': total_hyp,
+     }
+diff '--color=auto' -Naur MultiWOZ_Evaluation.head/mwzeval/normalization.py MultiWOZ_Evaluation.workingcopy/mwzeval/normalization.py
+--- MultiWOZ_Evaluation.head/mwzeval/normalization.py	2022-10-31 17:10:29.317573311 -0700
++++ MultiWOZ_Evaluation.workingcopy/mwzeval/normalization.py	2022-10-31 17:11:55.546036407 -0700
+@@ -4,28 +4,42 @@
+ from sacremoses import MosesTokenizer, MosesDetokenizer
+ 
+ 
++def normalize_gold_states(gold_states):
++    print("Not Normalizing golden_states")
++    return
++    for dialogue in gold_states.values():
++        for turn in dialogue:
++            for domain in turn:
++                new_state = {}
++                for slot, value in turn[domain].items():          
++                    slot = slot.lower().replace(' ', '')
++                    if slot == "arriveby": slot = "arrive"
++                    elif slot == "leaveat": slot = "leave"
++                    new_state[slot] =  normalize_state_slot_value(slot, value)
++                turn[domain] = new_state
++
++
+ def normalize_data(input_data):
+     """ In-place normalization of raw dictionary with input data. Normalize slot names, slot values, remove plurals and detokenize utterances. """
+-
+     mt, md = MosesTokenizer(lang='en'), MosesDetokenizer(lang='en')
+     slot_name_re = re.compile(r'\[([\w\s\d]+)\](es|s|-s|-es|)')
+     slot_name_normalizer = partial(slot_name_re.sub, lambda x: normalize_slot_name(x.group(1)))
+ 
+     for dialogue in input_data.values():
+         for turn in dialogue:
+-            turn["response"] = slot_name_normalizer(turn["response"].lower())
+-            turn["response"] = md.detokenize(mt.tokenize(turn["response"].replace('-s', '').replace('-ly', '')))
++            # turn["response"] = slot_name_normalizer(turn["response"].lower())
++            # turn["response"] = md.detokenize(mt.tokenize(turn["response"].replace('-s', '').replace('-ly', '')))
+ 
+             if "state" not in turn:
+                 continue
+-
++            
+             for domain in turn["state"]:
++                print("turn", turn["state"])
+                 new_state = {}
+-                for slot, value in turn["state"][domain].items():          
+-                    slot = slot.lower().replace(' ', '')
+-                    if slot == "arriveby": slot = "arrive"
+-                    elif slot == "leaveat": slot = "leave"
+-                    new_state[slot] =  normalize_state_slot_value(slot, value)
++                for slot, value in turn["state"][domain].items():
++                    # Lower-case slot name
++                    slot = slot.lower().replace(' ', '')                
++                    new_state[slot] = normalize_state_slot_value(slot, value)
+                 turn["state"][domain] = new_state
+     
+ 
+@@ -166,6 +180,12 @@
+         """ Converts time to the only format supported by database, e.g. 07:15. """
+         time = time.strip().lower()
+ 
++        # Strip leading zero - like 06:23 but but not when 0:23
++        if len(time) > 1 and time[0] == "0" and time[1] != ":":
++            return time[1:]
++        else:
++            return time
++
+         if time == "afternoon": return "13:00"
+         if time == "lunch" or time == "noon" or time == "mid-day" or time == "around lunch time": return "12:00"
+         if time == "morning": return "08:00"
+@@ -241,18 +261,18 @@
+ 
+         return food
+ 
+-    if slot_name in ["name", "destination", "departure"]:
+-        return name_to_canonical(value)
+-    elif slot_name == "type":
+-        return type_to_canonical(value)
+-    elif slot_name == "food":
+-        return food_to_canonical(value)
+-    elif slot_name in ["arrive", "leave", "arriveby", "leaveat", "time"]:
++    #if slot_name in ["name", "destination", "departure"]:
++    #    return name_to_canonical(value)
++    #elif slot_name == "type":
++    #    return type_to_canonical(value)
++    #elif slot_name == "food":
++    #    return food_to_canonical(value)
++    if slot_name in ["arrive", "leave", "arriveby", "leaveat", "time"]:
+         return time_to_canonical(value)
+-    elif slot_name in ["parking", "internet"]:
+-        return "yes" if value == "free" else value
+-    else:
+-        return value
++    #elif slot_name in ["parking", "internet"]:
++    #    return "yes" if value == "free" else value
++    #else:
++    return value
+ 
+ 
+ def time_str_to_minutes(time_string):
+diff '--color=auto' -Naur MultiWOZ_Evaluation.head/mwzeval/utils.py MultiWOZ_Evaluation.workingcopy/mwzeval/utils.py
+--- MultiWOZ_Evaluation.head/mwzeval/utils.py	2022-10-31 17:10:29.317573311 -0700
++++ MultiWOZ_Evaluation.workingcopy/mwzeval/utils.py	2022-10-31 17:11:46.825989478 -0700
+@@ -102,9 +102,13 @@
+     return references
+ 
+ 
+-def load_gold_states():
+-    dir_path = os.path.dirname(os.path.realpath(__file__))
+-    data_path = os.path.join(dir_path, "data", "gold_states.json")
++def load_gold_states(golden):
++    if not golden:
++        dir_path = os.path.dirname(os.path.realpath(__file__))
++        data_path = os.path.join(dir_path, "data", "gold_states.json")
++    else:
++        data_path = golden
++    print("load_golden_states", data_path)
+     if os.path.exists(data_path):
+         with open(data_path) as f:
+             return json.load(f)

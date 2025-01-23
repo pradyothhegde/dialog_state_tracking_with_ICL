@@ -1,5 +1,5 @@
 # sample run: 
-# export CUDA_VISIBLE_DEVICES=$(free-gpus.sh 1); export HF_HUB_OFFLINE=1; export HF_DATASETS_OFFLINE=1; export TRANSFORMERS_OFFLINE=1; export HF_EVALUATE_OFFLINE=1; python TOD_mw24_4_infer_slot_by_slot1.py
+# export CUDA_VISIBLE_DEVICES=$(free-gpus.sh 1); export HF_HUB_OFFLINE=1; export HF_DATASETS_OFFLINE=1; export TRANSFORMERS_OFFLINE=1; export HF_EVALUATE_OFFLINE=1; python DST_mw24_4_infer_slot_by_slot.py
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, StoppingCriteria, StoppingCriteriaList
@@ -10,7 +10,9 @@ import json
 import os
 import json_repair
 import platform
-from slot_infer_scripts import get_instruction_for_domain
+from slot_infer_scripts.get_instruction_for_domain import get_instruction_for_domain
+from slot_infer_scripts.append_model_name import append_model_name
+from slot_infer_scripts.get_sorted_slots import get_sorted_slots
 
 from TODx import finding_test_labels, remove_punctuations
 a = torch.rand(1, 1).cuda()
@@ -21,11 +23,10 @@ a = torch.rand(1, 1).cuda()
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_name', type=str, default='allenai/OLMo-7B-Instruct', help='model name')  # allenai/OLMo-7B-Instruct | mistralai/Mistral-7B-Instruct-v0.3
-    parser.add_argument('--nec_files', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/experiments/NecessaryFiles/')
-    parser.add_argument('--output_folder_path', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/experiments/mw24/')
+    parser.add_argument('--output_folder_path', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/experiments/mw24/baseline/')
     parser.add_argument('--out_folder_prefix', type=str, default='DST_')
 
-    parser.add_argument('--input_file', type=str,       default='LLM_input_U_PY_TY_agent_added_n_limited_nn.txt', help='Check necessary files folder for the appropriate file')
+    parser.add_argument('--input_file', type=str,       default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MW24/baseline/MW24_OP_ST_PH-empty_SU_Labse_NN-3_U_SV/MW24_OP_ST_PH-empty_SU_Labse_NN-3_U_SV.txt', help='The input file to LLM')
     parser.add_argument('--instruction', type=int,      default=2, help='0=no instruction, 1=dynamic instruction, 2 = static instruction')
 
     parser.add_argument('--offset_start', type=int, default=0, help='Start offset for the test file')
@@ -34,62 +35,36 @@ def parse_args():
 
 # output config file
 config_string = '''
-This is the configuration file for the run.
-TOD_mw24_O7BI_SD_I1_10_PY_TY filename indicates the following:
-TOD - Task of Dialogue
-mw24 - MultiWOZ 2.4 dataset
-O7BI - OLMo 7B Instruct model
-SS - Slot Detection based on domain (domain wise, open ended), SS - Slot Detection based on slot by slot
-I1 - 0 = No instruction, Instruction type 1 (Dynamic instruction), 2 = Static instruction
-10 - Maximum context number
-PY - Punctuation Yes
-TY - Tagging Yes
-This is extracted from the input file.
+Dataset = "MW24"
+Punct = original - "O" | no punctuation - "N" | model punctuation - "M"
+Speaker_tag = "Y" | "N"
+Slot_placeholder = "not mentioned" | "N.A." | "none" | deleting the slot key if there is no placeholder - "omit" | empty string - "empty"
+Slot_key_sort = "Y" | "N" | seed - "1", "2" or number
+Sentence_embedding_model = "sentence-transformers/LaBSE" 
+NNcount = 10
+Dialog_history = "Y" | "N"
+Decoding = slot key and value given domain - "SKV" | slot value given slot key - "SV"
 '''
 
 
 
-
-# dom2slots = {
-#     'taxi': ['leaveAt', 'destination', 'departure', 'arriveBy'], 
-#     'restaurant': ['people', 'day', 'time', 'food', 'pricerange', 'name', 'area'], 
-#     'attraction': ['type', 'name', 'area'], 
-#     'train': ['people', 'leaveAt', 'destination', 'day', 'arriveBy', 'departure'], 
-#     'hotel': ['stay', 'day', 'people', 'name', 'area', 'parking', 'pricerange', 'stars', 'internet', 'type']
-# }
-
+# unsorted slots
 dom2slots = {
-    'taxi': ['arriveBy', 'departure', 'destination', 'leaveAt'], 
-    'restaurant': ['area', 'day', 'food', 'name', 'people', 'pricerange', 'time'], 
-    'attraction': ['area', 'name', 'type'], 
-    'train': ['arriveBy', 'day', 'departure', 'destination', 'leaveAt', 'people'], 
-    'hotel': ['area', 'day', 'internet', 'name', 'parking', 'people', 'pricerange', 'stars', 'stay', 'type']
+    'taxi': ['leaveAt', 'destination', 'departure', 'arriveBy'], 
+    'restaurant': ['people', 'day', 'time', 'food', 'pricerange', 'name', 'area'], 
+    'attraction': ['type', 'name', 'area'], 
+    'train': ['people', 'leaveAt', 'destination', 'day', 'arriveBy', 'departure'], 
+    'hotel': ['stay', 'day', 'people', 'name', 'area', 'parking', 'pricerange', 'stars', 'internet', 'type']
 }
 
+# dom2slots = {
+#     'taxi': ['arriveBy', 'departure', 'destination', 'leaveAt'], 
+#     'restaurant': ['area', 'day', 'food', 'name', 'people', 'pricerange', 'time'], 
+#     'attraction': ['area', 'name', 'type'], 
+#     'train': ['arriveBy', 'day', 'departure', 'destination', 'leaveAt', 'people'], 
+#     'hotel': ['area', 'day', 'internet', 'name', 'parking', 'people', 'pricerange', 'stars', 'stay', 'type']
+# }
 
-
-
-    # pass
-
-
-def get_details_from_input_file(input_file_name):
-    # input_file_name = 'LLM_input_sentences_UA_PN.txt'
-    if '_UA' in input_file_name:
-        dialog_side = 'UA'
-    elif '_U' in input_file_name:
-        dialog_side = 'U'
-    
-    if '_PN' in input_file_name:
-        punct = 'N'
-    else:
-        punct = 'Y'
-
-    if '_TN' in input_file_name:
-        tag = 'N'
-    else:
-        tag = 'Y'
-
-    return dialog_side, punct, tag
 
 class NewlineStoppingCriteria(StoppingCriteria):
     def __init__(self, tokenizer, newline_token_id):
@@ -100,34 +75,73 @@ class NewlineStoppingCriteria(StoppingCriteria):
         # Check if the most recent token is a newline
         return input_ids[0, -1] == self.newline_token_id
 
+
+    pass
+
 def main():
     args = parse_args()
 
     # Create output folder
     output_folder_path = args.output_folder_path
 
-    if args.model_name == 'allenai/OLMo-7B-Instruct':
-        model_name_short = 'O7BI'
-    elif args.model_name == 'mistralai/Mistral-7B-Instruct-v0.3':
-        model_name_short = 'M7BIV03'
+    # Get basename of the input file without extension
+    input_file_name = os.path.basename(args.input_file)
+    input_file_name = os.path.splitext(input_file_name)[0]
+    # If there is "SV" in the output_folder_name, replace it with "SKV"
+    output_folder_name = input_file_name
+    output_folder_name = append_model_name(output_folder_name, args.model_name)
 
-    dataset_name = 'mw24'
-    # model_name_short = 'O7BI'
-    # model_name_short = 'M7BIV03'
-    input_data_folder = args.nec_files
-    context_number = args.context_number
-    # dialog_side = args.dialog_side
-    # punct = args.punct
-    # tag = args.tag
-    arg_instruction = args.instruction
+    if "SKV" in input_file_name:
+        output_folder_name = input_file_name.replace("SKV", "SV")
 
-    # Get details from the input file
-    dialog_side, punct, tag = get_details_from_input_file(args.input_file)
-    
-    output_folder_name = args.out_folder_prefix + dataset_name + '_' + model_name_short + '_SS_I' + str(arg_instruction) + '_' + str(dialog_side) + '_' + str(context_number) + '_P' + str(punct) + '_T' + str(tag)
+    # create the output folder if it does not exist. If it exists, print the message and exit
     output_folder_name = os.path.join(output_folder_path, output_folder_name)
     if not os.path.exists(output_folder_name):
         os.makedirs(output_folder_name)
+
+    # output log directory
+    log_folder = os.path.join(output_folder_name, 'log_files')
+    if not os.path.exists(log_folder):
+        os.makedirs(log_folder)
+
+    # output log and config file name
+    logg_file = os.path.join(log_folder, str(args.offset_start)+'_log.json')
+    config_file = os.path.join(output_folder_name, str(args.offset_start)+'_config.json')
+
+    # if the log file exists, print the message and exit
+    if os.path.exists(logg_file):
+        print(f"Output log file {logg_file} already exists. Exiting.")
+        print("----------------")
+        exit()
+
+    # Get the test TSV file. Which is in the same folder as the input file. The name will have "test" and it is TSV file.
+    input_data_folder = os.path.dirname(args.input_file)
+    all_input_folder_files = os.listdir(input_data_folder)
+    test_file = [file for file in all_input_folder_files if 'test' in file and '.tsv' in file][0]
+    print(f"Test TSV file: {test_file}")
+
+    # Load input file
+    input_file = args.input_file
+    with open(input_file, 'r') as f:
+        in_file = f.readlines()
+
+    # Load test file
+    test_tsv_file_path = os.path.join(input_data_folder, test_file)
+    with open(test_tsv_file_path, 'r') as tst_tsv_file:
+        test_data = tst_tsv_file.readlines()
+
+   # Create config file
+    with open(config_file, 'w') as config_file:
+        config_file.write(json.dumps(vars(args), indent=4))
+        config_file.write(f'Output folder: {output_folder_name}')
+        # Add details of the run
+        config_file.write(platform.node())
+        config_file.write('\n')
+        config_file.write(platform.platform())
+        config_file.write('\n')
+        config_file.write(f"Output written at: {output_folder_name}")
+        config_file.write('\n')
+        config_file.write(config_string)
 
     # Model and tokenizer
     model_name = args.model_name
@@ -139,41 +153,7 @@ def main():
     newline_token_id = tokenizer.encode("\n", add_special_tokens=False)[0]
 
 
-    # Create log file
-    log_folder = os.path.join(output_folder_name, 'log_files')
-    if not os.path.exists(log_folder):
-        os.makedirs(log_folder)
-    logg_file = os.path.join(log_folder, str(args.offset_start)+'_log.json')
-    # if log file exists, print the message and exit
-    if os.path.exists(logg_file):
-        print(f"Log file {logg_file} exists. Exiting.")
-        exit()
 
-    # Load input file
-    # input_file = args.input_file
-    input_file = os.path.join(input_data_folder, args.input_file)
-    with open(input_file, 'r') as f:
-        in_file = f.readlines()
-    
-    # Load test file
-    test_tsv_file_path = os.path.join(input_data_folder, 'mw24_DST_test_U_punct_turns.tsv')
-    with open(test_tsv_file_path, 'r') as tst_tsv_file:
-        test_data = tst_tsv_file.readlines()
-
-    # Create config file
-    config_file = os.path.join(output_folder_name, str(args.offset_start)+'_config.json')
-    with open(config_file, 'w') as config_file:
-        config_file.write(json.dumps(vars(args), indent=4))
-        config_file.write('Paramenters extracted from the input file. (Need not consider from the args above, consider from below.)\n')
-        config_file.write(f" dialog side: {dialog_side}, punctuation: {punct}, tag: {tag}")
-        # Add details of the run
-        config_file.write(platform.node())
-        config_file.write('\n')
-        config_file.write(platform.platform())
-        config_file.write('\n')
-        config_file.write(f"Output written at: {output_folder_name}")
-        config_file.write('\n')
-        config_file.write(config_string)
 
     counter = 0
     for i, (line, gold_line) in enumerate(zip(in_file, test_data)):
@@ -201,7 +181,6 @@ def main():
         decoded_responses = []
         # print(gold_domain)
         for i, dom in enumerate(ast.literal_eval(gold_domain)):
-        # for i, (dom, g_slots) in enumerate(zip(ast.literal_eval(gold_domain), ast.literal_eval(gold_slots))):
             print(dom)
             # print(type(dom))
             if args.instruction == 0:
@@ -214,8 +193,11 @@ def main():
             slot_history_dict = slot_history_dict_temp
             # print(slot_history_dict)
             # breakpoint()
-            # get the slots for the domain
-            slot_values = dom2slots[dom]
+
+            # Get the slot values in alphabetical order or based on seed number.
+            slot_values = get_sorted_slots(dom, input_file_name)
+
+            # slot_values = dom2slots[dom]
             if i == 0:
                 slot_history_dict = '\"' + dom + '\": {'
             else:

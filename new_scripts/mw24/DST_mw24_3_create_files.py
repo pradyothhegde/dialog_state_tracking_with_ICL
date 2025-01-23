@@ -31,7 +31,7 @@ def parse_args():
 
     parser.add_argument("--punct", type=str, default="O", help="Original - O | No punctuation - N | Model punctuation - M")
     parser.add_argument("--speaker_tag", type=str, default="Y", help="Y or N")
-    parser.add_argument("--slot_placeholder", type=str, default="empty", help="not mentioned | N.A. | none | empty("") | omit") 
+    parser.add_argument("--slot_placeholder", type=str, default="empty", help="not mentioned | N.A. | empty("") | omit") 
     parser.add_argument("--slot_key_sort", type=str, default="N", help="Y | N | seed number")
 
     parser.add_argument("--sentence_embedding_model", type=str, default="sentence-transformers/LaBSE", help="sentence-transformers/LaBSE - Labse | sergioburdisso/dialog2flow-single-bert-base - D2F ")

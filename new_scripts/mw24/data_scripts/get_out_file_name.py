@@ -32,14 +32,14 @@ def get_out_file_name(args):
     elif slot_placeholder == "empty":
         slot_placeholder_ret = "PH-empty"
 
-    if slot_key_sort == "Y":
+    # if the slot_key_sort is a character, then check Y or N
+
+    if slot_key_sort.isdigit():
+        slot_key_sort_ret = f"SU{slot_key_sort}"
+    elif slot_key_sort == "Y":
         slot_key_sort_ret = "SO"
     elif slot_key_sort == "N":
         slot_key_sort_ret = "SU"
-    elif slot_key_sort == "1":
-        slot_key_sort_ret = "SU1"
-    elif slot_key_sort == "2":
-        slot_key_sort_ret = "SU2"
 
     if sentence_embedding_model == "sentence-transformers/LaBSE":
         sentence_embedding_model_ret = "Labse"
