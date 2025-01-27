@@ -3,6 +3,7 @@ import os
 import csv
 import json
 from multiwoz_evaluation.evaluate import evaluate
+from time import sleep
 
 def arg_parser():
     parser = argparse.ArgumentParser(description='Run evaluate.py on multiple JSON files.')
@@ -15,6 +16,11 @@ def main():
     args = parser.parse_args()
     input_folder = args.input_folder
     output_csv_path = args.output_csv
+    if not os.path.exists(input_folder):
+        os.makedirs(input_folder)
+    else:
+        print("Folder already exists. Files will be overwritten. You have 15 seconds to cancel.")
+        sleep(15)
     golden_file = "/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/new_scripts/mw24/multiwoz_evaluation/speech_aware_dialogue/test-dstc11.2022-1102.gold.json"
     
     # list the files inside the input folder

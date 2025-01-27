@@ -74,3 +74,4 @@ if __name__ == '__main__':
     results = evaluate(input_data, args.bleu, args.dst, args.success, args.richness, golden='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/new_scripts/mw24/multiwoz_evaluation/speech_aware_dialogue/test-dstc11.2022-1102.gold.json')   # load and evaluate the input data
     # results = evaluate(input_data, False, True, False, False, golden='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/new_scripts/mw24/multiwoz_evaluation/speech_aware_dialogue/test-dstc11.2022-1102.gold.json')   # load and evaluate the input data 
     print_and_save_results(results, args.output)
+    

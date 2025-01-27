@@ -1,6 +1,8 @@
 import argparse
 import os
 import json
+import json
+from json_repair import json_repair
 
 def arg_parser():
     parser = argparse.ArgumentParser(description='Convert log to eval format')
@@ -16,7 +18,7 @@ dom2slots = {
     'hotel': ['stay', 'day', 'people', 'name', 'area', 'parking', 'pricerange', 'stars', 'internet', 'type']
 }
 
-empty_placeholders = ["not mentioned", "N.A.", "none", "", "none"]
+empty_placeholders = ["not mentioned", "N.A.", "none", ""]
 
 def convert_to_string(value):
   ''' This function converts the given value to a string '''
@@ -40,7 +42,7 @@ def main():
             lines = f.readlines()
             for line_string in lines:
                 line_json = json.loads(line_string)
-                processed_output = json.loads(line_json['processed_output'])
+                processed_output = json_repair.loads(line_json['processed_output'])
 
                 current_state = {}
                 active_domains = []
