@@ -1,6 +1,6 @@
 import ast
 import tqdm
-from . import repunctuate_tsv
+from . import new_punctuate
 import re
 
 def replace_unk_to_dash(text):      # replace <unk> to '-'
@@ -22,8 +22,8 @@ def create_TSV_from_json(json_file_path, tsv_file_path, args):
     
     with open(json_file_path, 'r') as train_file:
         for i, line in tqdm.tqdm(enumerate(train_file)) :
-            # if i == 100:                                           # for testing, remove later   
-            #     break
+            # if i < 620:                                           # for testing, remove later   
+            #     continue
             line_data = ast.literal_eval(line.strip())
             filename = line_data[0]
             dialogue = line_data[1:]
@@ -45,29 +45,29 @@ def create_TSV_from_json(json_file_path, tsv_file_path, args):
                     # print(user_utterance)
                     # writing_string = writing_string + user_utterance + '\t'     # user utterance add
 
-                    # # punctuation to user utterance operation
+                    # punctuation to user utterance operation
                     if punctuation == 'N':      # No punctuation
                         user_utterance = remove_punc(user_utterance)
                         user_utterance = user_utterance.strip()
-                    #     # pass
-                    # elif punctuation == 'M':    # Model punctuation
-                    #     user_utterance = user_utterance
-                    #     # print(f"Original: {user_utterance}")
-                    #     user_utterance = remove_punc(user_utterance)
-                    #     # print(f"Removed Punc: {user_utterance}")
-                    #     # print("------------------------------------")
-                    #     user_utterance = new_punctuate.punctuate_and_segment_texts([user_utterance])
-                    #     # the user_utterance will be a list of list.
-                    #     # print("------------------------------------")
-                    #     user_utterance = ' '.join(user_utterance[0])
-                    #     user_utterance = replace_unk_to_dash(user_utterance)    # dash handle
-                    #     # print(f"Added Punc: {user_utterance}")
-                    #     # print("====================================")
-                    #     # breakpoint()
-                    #     # user_utterance = punct_processor.add_punctuation(user_utterance)
-                    #     # user_utterance = punct_processor.clean_text(user_utterance)
-                    #     # user_utterance = user_utterance.strip()
-                    #     # pass
+                        # pass
+                    elif punctuation == 'M':    # Model punctuation
+                        user_utterance = user_utterance
+                        # print(f"Original: {user_utterance}")
+                        user_utterance = remove_punc(user_utterance)
+                        # print(f"Removed Punc: {user_utterance}")
+                        # print("------------------------------------")
+                        user_utterance = new_punctuate.punctuate_and_segment_texts([user_utterance])
+                        # the user_utterance will be a list of list.
+                        # print("------------------------------------")
+                        user_utterance = ' '.join(user_utterance[0])
+                        user_utterance = replace_unk_to_dash(user_utterance)    # dash handle
+                        # print(f"Added Punc: {user_utterance}")
+                        # print("====================================")
+                        # breakpoint()
+                        # user_utterance = punct_processor.add_punctuation(user_utterance)
+                        # user_utterance = punct_processor.clean_text(user_utterance)
+                        # user_utterance = user_utterance.strip()
+                        # pass
 
                     conv_history = conv_history + user_utterance.strip()         # --- is to indicate turn change
                     # breakpoint()
@@ -94,28 +94,29 @@ def create_TSV_from_json(json_file_path, tsv_file_path, args):
                     agent_utterance = agent_utterance.replace('  ', ' ')    # remove double spaces, if any.
                     agent_utterance = agent_utterance.replace('  ', ' ')
 
-                    # # punctuation to agent utterance operation
+                    # punctuation to agent utterance operation
                     if punctuation == 'N':    # No punctuation
+                        # agent_utterance = punct_processor.remove_punctuation(agent_utterance)
                         agent_utterance = remove_punc(agent_utterance)
                         agent_utterance = agent_utterance.strip()
-                    #     # pass
-                    # elif punctuation == 'M':    # Model punctuation
-                    #     # agent_utterance = punct_processor.remove_punctuation(agent_utterance)
-                    #     # agent_utterance = punct_processor.add_punctuation(agent_utterance)
-                    #     # agent_utterance = punct_processor.clean_text(agent_utterance)
-                    #     # print(f"Original: {agent_utterance}")
-                    #     agent_utterance = remove_punc(agent_utterance)
-                    #     # print("------------------------------------")
-                    #     # print(f"Removed Punc: {agent_utterance}")
-                    #     agent_utterance = new_punctuate.punctuate_and_segment_texts([agent_utterance])
-                    #     # the agent_utterance will be a list of list.       
-                    #     agent_utterance = ' '.join(agent_utterance[0])
-                    #     agent_utterance = replace_unk_to_dash(agent_utterance)  # dash unk handle.
-                    #     # print("------------------------------------")
-                    #     # print(agent_utterance)
-                    #     # print("====================================")
-                    #     # breakpoint()
-                    #     # pass
+                        # pass
+                    elif punctuation == 'M':    # Model punctuation
+                        # agent_utterance = punct_processor.remove_punctuation(agent_utterance)
+                        # agent_utterance = punct_processor.add_punctuation(agent_utterance)
+                        # agent_utterance = punct_processor.clean_text(agent_utterance)
+                        # print(f"Original: {agent_utterance}")
+                        agent_utterance = remove_punc(agent_utterance)
+                        # print("------------------------------------")
+                        # print(f"Removed Punc: {agent_utterance}")
+                        agent_utterance = new_punctuate.punctuate_and_segment_texts([agent_utterance])
+                        # the agent_utterance will be a list of list.       
+                        agent_utterance = ' '.join(agent_utterance[0])
+                        agent_utterance = replace_unk_to_dash(agent_utterance)  # dash unk handle.
+                        # print("------------------------------------")
+                        # print(agent_utterance)
+                        # print("====================================")
+                        # breakpoint()
+                        # pass
                     # print(agent_utterance)
                     writing_string = filename + '\t' + conv_history.strip() + '\t' + domain_write + slots_write + '\n'
                 
@@ -131,11 +132,5 @@ def create_TSV_from_json(json_file_path, tsv_file_path, args):
                     
                     conv_history = conv_history + '---'          # --- is to indicate turn change
                     conv_history.replace('  ', ' ')     # remove double spaces, if any.
-
-    # if the punctuation is M, then add the punctuation to the text.
-    if punctuation == 'M':
-        print(" adding punctuation")
-        repunctuate_tsv.repunctuate_tsv(tsv_file_path)
-            
 
     print('TSV files created successfully!')

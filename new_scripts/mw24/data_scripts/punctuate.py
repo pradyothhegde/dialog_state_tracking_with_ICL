@@ -2,10 +2,12 @@
 
 # To make the all small cased text to punctuated text.
 # Uses a punctuation model from HuggingFace. https://huggingface.co/1-800-BAD-CODE/punctuation_fullstop_truecase_english  
+# Another punctuation model: "1-800-BAD-CODE/xlm-roberta_punctuation_fullstop_truecase"
 
 from typing import List
 import re
 from punctuators.models import PunctCapSegModelONNX
+from time import sleep
 
 class TextProcessor:
     def __init__(self, model_name: str):
@@ -98,7 +100,8 @@ class TextProcessor:
 # Example usage
 if __name__ == "__main__":
     # Initialize the processor with the model name
-    processor = TextProcessor("pcs_en")
+    # processor = TextProcessor("pcs_en")
+    processor = TextProcessor("1-800-BAD-CODE/xlm-roberta_punctuation_fullstop_truecase")
 
     # Specify input and output file paths
     input_file_path = '/mnt/matylda4/hegde/olmo/spotify/0_50_samples'
@@ -106,3 +109,4 @@ if __name__ == "__main__":
 
     # Process the file
     processor.process_file(input_file_path, output_file_path)
+

@@ -7,8 +7,8 @@ from time import sleep
 
 def arg_parser():
     parser = argparse.ArgumentParser(description='Run evaluate.py on multiple JSON files.')
-    parser.add_argument('--input_folder', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/results/mw24/baseline', help='Path to the folder containing JSON input files.')
-    parser.add_argument('--output_csv', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/results/mw24/results_csv.csv', help='Path to the output CSV file.')
+    parser.add_argument('--input_folder', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/results/mw24/punct', help='Path to the folder containing JSON input files.')
+    parser.add_argument('--output_csv', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/results/mw24/punct.csv', help='Path to the output CSV file.')
     return parser
 
 def main():
@@ -16,12 +16,15 @@ def main():
     args = parser.parse_args()
     input_folder = args.input_folder
     output_csv_path = args.output_csv
-    if not os.path.exists(input_folder):
-        os.makedirs(input_folder)
-    else:
-        print("Folder already exists. Files will be overwritten. You have 15 seconds to cancel.")
-        sleep(15)
-    golden_file = "/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/new_scripts/mw24/multiwoz_evaluation/speech_aware_dialogue/test-dstc11.2022-1102.gold.json"
+    # if not os.path.exists(input_folder):
+    #     os.makedirs(input_folder)
+    # else:
+    #     print("Folder already exists. Files will be overwritten. You have 15 seconds to cancel.")
+    #     sleep(15)
+    
+    # golden_file = "/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/new_scripts/mw24/multiwoz_evaluation/speech_aware_dialogue/test-dstc11.2022-1102.gold.json"
+    # golden_file = "/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/new_scripts/mw24/multiwoz_evaluation/mw24_eval_output.json"
+    golden_file = "/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/new_scripts/mw24/multiwoz_evaluation/mw24_eval_output_lowercase.json"
     
     # list the files inside the input folder
     files = os.listdir(input_folder)

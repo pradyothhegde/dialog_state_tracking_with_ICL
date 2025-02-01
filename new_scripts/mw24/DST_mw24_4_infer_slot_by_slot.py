@@ -23,7 +23,7 @@ a = torch.rand(1, 1).cuda()
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_name', type=str, default='allenai/OLMo-7B-Instruct', help='model name')  # allenai/OLMo-7B-Instruct | mistralai/Mistral-7B-Instruct-v0.3
-    parser.add_argument('--output_folder_path', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/experiments/mw24/baseline/')
+    parser.add_argument('--output_folder_path', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/experiments/mw24/punct/')
     parser.add_argument('--out_folder_prefix', type=str, default='DST_')
 
     parser.add_argument('--input_file', type=str,       default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MW24/baseline/MW24_OP_ST_PH-empty_SU_Labse_NN-3_U_SV/MW24_OP_ST_PH-empty_SU_Labse_NN-3_U_SV.txt', help='The input file to LLM')
@@ -48,22 +48,14 @@ Decoding = slot key and value given domain - "SKV" | slot value given slot key -
 
 
 
-# unsorted slots
-dom2slots = {
-    'taxi': ['leaveAt', 'destination', 'departure', 'arriveBy'], 
-    'restaurant': ['people', 'day', 'time', 'food', 'pricerange', 'name', 'area'], 
-    'attraction': ['type', 'name', 'area'], 
-    'train': ['people', 'leaveAt', 'destination', 'day', 'arriveBy', 'departure'], 
-    'hotel': ['stay', 'day', 'people', 'name', 'area', 'parking', 'pricerange', 'stars', 'internet', 'type']
-}
 
-# dom2slots = {
-#     'taxi': ['arriveBy', 'departure', 'destination', 'leaveAt'], 
-#     'restaurant': ['area', 'day', 'food', 'name', 'people', 'pricerange', 'time'], 
-#     'attraction': ['area', 'name', 'type'], 
-#     'train': ['arriveBy', 'day', 'departure', 'destination', 'leaveAt', 'people'], 
-#     'hotel': ['area', 'day', 'internet', 'name', 'parking', 'people', 'pricerange', 'stars', 'stay', 'type']
-# }
+dom2slots = {
+    'taxi': ['arriveBy', 'departure', 'destination', 'leaveAt'], 
+    'restaurant': ['area', 'day', 'food', 'name', 'people', 'pricerange', 'time'], 
+    'attraction': ['area', 'name', 'type'], 
+    'train': ['arriveBy', 'day', 'departure', 'destination', 'leaveAt', 'people'], 
+    'hotel': ['area', 'day', 'internet', 'name', 'parking', 'people', 'pricerange', 'stars', 'stay', 'type']
+}
 
 
 class NewlineStoppingCriteria(StoppingCriteria):
@@ -87,10 +79,9 @@ def main():
     # Get basename of the input file without extension
     input_file_name = os.path.basename(args.input_file)
     input_file_name = os.path.splitext(input_file_name)[0]
-    # If there is "SV" in the output_folder_name, replace it with "SKV"
+    # If there is "SKV" in the output_folder_name, replace it with "SV"
     output_folder_name = input_file_name
     output_folder_name = append_model_name(output_folder_name, args.model_name)
-
     if "SKV" in input_file_name:
         output_folder_name = input_file_name.replace("SKV", "SV")
 

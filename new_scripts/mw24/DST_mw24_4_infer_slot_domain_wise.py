@@ -20,11 +20,11 @@ a = torch.rand(1, 1).cuda()
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_name', type=str, default='allenai/OLMo-7B-Instruct', help='model name')    # allenai/OLMo-7B-Instruct | mistralai/Mistral-7B-Instruct-v0.3
-    parser.add_argument('--output_folder_path', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/experiments/mw24/')
+    parser.add_argument('--output_folder_path', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/experiments/mw24/punct_noTag')
     parser.add_argument('--out_folder_prefix', type=str, default='DST_')
 
     parser.add_argument('--input_file', type=str,       default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_NP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_NP_ST_PH-nm_SO_Labse_NN-10_U_SKV.txt', help='The input file to LLM')
-    parser.add_argument('--instruction', type=int,      default=0, help='0=no instruction, 1=dynamic instruction, 2 = static instruction')
+    parser.add_argument('--instruction', type=int,      default=1, help='0=no instruction, 1=dynamic instruction, 2 = static instruction')
 
     parser.add_argument('--offset_start', type=int, default=0, help='Start offset for the test file')
     parser.add_argument('--offset_add', type=int, default=8000, help='Add offset for the test file')
