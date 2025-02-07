@@ -1,17 +1,8 @@
+# Standardizes a variety of time string formats to HH:MM format.
+ 
 import re
 
 def standardize_time(time_str):
-    """
-    Standardizes a variety of time string formats to HH:MM format.
-
-    Args:
-      time_str: The time string to standardize.
-
-    Returns:
-      A string representing the time in HH:MM format, or None if the input
-      cannot be parsed.
-    """
-
     time_str = time_str.lower().strip()  # Handle case and leading/trailing spaces
 
     # Count digits; if more than 4, it is an invalid input
@@ -30,7 +21,6 @@ def standardize_time(time_str):
           hour = 0
         if 0 <= hour <=23 and 0<= minute <=59:
           return f"{hour:02}:{minute:02}"
-
 
     # Case 2: HH AM/PM format (e.g., 6 pm, 8 am, 12 pm)
     match = re.match(r"(\d{1,2})\s*(am|pm)", time_str)
@@ -85,9 +75,9 @@ def standardize_time(time_str):
 
 
 def main():
-  """
-  Main function to test the standardize_time function
-  """
+  
+  # Main function to test the standardize_time function
+  
   # Test cases
   test_cases = [
     "600 pm",
@@ -134,7 +124,6 @@ def main():
   for time_str in fail_cases:
       standardized_time = standardize_time(time_str)
       print(f"Original: '{time_str}', Standardized: '{standardized_time}'")
-
 
 if __name__ == "__main__":
     main()

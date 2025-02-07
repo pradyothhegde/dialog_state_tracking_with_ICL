@@ -8,8 +8,8 @@ import re
 
 def arg_parser():
     parser = argparse.ArgumentParser(description='Convert log to eval format')
-    parser.add_argument('--log_file', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/experiments/mw24/punct/O7BI_MW24_NP_ST_PH-nm_SO_Labse_NN-10_UA_SV', help='Log file path')
-    parser.add_argument('--output_folder', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/results/mw24/punct', help='Output file path')
+    parser.add_argument('--log_file', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/experiments/mw24/mistrals/M7BI03_MW24_MP_ST_PH-nm_SO_Labse_NN-10_UA_SV_emb-U', help='Log file path')
+    parser.add_argument('--output_folder', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/results/mw24/mistrals', help='Output file path')
     # Below options need to be debugged; Dont use them.
     parser.add_argument('--folder_operation', type=bool, default=False, help='If True, then iterate over all files in the folder')
     parser.add_argument('--main_folder', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/experiments/mw24/PLH', help='Main folder path')

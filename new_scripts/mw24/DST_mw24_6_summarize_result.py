@@ -7,8 +7,8 @@ from time import sleep
 
 def arg_parser():
     parser = argparse.ArgumentParser(description='Run evaluate.py on multiple JSON files.')
-    parser.add_argument('--input_folder', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/results/mw24/punct', help='Path to the folder containing JSON input files.')
-    parser.add_argument('--output_csv', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/results/mw24/punct.csv', help='Path to the output CSV file.')
+    parser.add_argument('--input_folder', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/results/mw24/mistrals', help='Path to the folder containing JSON input files.')
+    parser.add_argument('--output_csv', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/results/mw24/mistrals.csv', help='Path to the output CSV file.')
     return parser
 
 def main():

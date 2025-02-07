@@ -1,8 +1,19 @@
+# export CUDA_VISIBLE_DEVICES=$(free-gpus.sh 1); export HF_HUB_OFFLINE=1; export HF_DATASETS_OFFLINE=1; export TRANSFORMERS_OFFLINE=1; export HF_EVALUATE_OFFLINE=1; /homes/kazi/hegde/miniconda3/envs/dialog/bin/python /mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/new_scripts/mw24/compute_save_sentence_embedding.py
+
 import torch
 from sentence_transformers import SentenceTransformer
 import numpy as np
+import os
+import argparse
 
-def compute_save_sentence_embedding(tsv_file_path):    # file, dialog_side, punct
+def arg_parser():
+    parser = argparse.ArgumentParser(description='Compute and save sentence embeddings for the given tsv file.')
+    parser.add_argument('--tsv_file_path', type=str, help='Path to the tsv file.')
+    parser.add_argument('--sentence_embedding_model', default='sentence-transformers/LaBSE', type=str, help='Sentence embedding model name.')
+    args = parser.parse_args()
+    return args
+
+def compute_save_sentence_embedding(tsv_file_path, sentence_embedding_model):    # file, dialog_side, punct
     # Calculate sentence embedding and save in npy file
     # train_tsv_file = os.path.join(data_path, 'mw24_DST_train_turns.tsv')
     # test_tsv_file = os.path.join(data_path, 'mw24_DST_test_turns.tsv')
@@ -15,7 +26,7 @@ def compute_save_sentence_embedding(tsv_file_path):    # file, dialog_side, punc
     numpy_file_path = tsv_file_path.replace('.tsv', '.npy')
     
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    sentence_model = SentenceTransformer('sentence-transformers/LaBSE')
+    sentence_model = SentenceTransformer(sentence_embedding_model)
     # sentence_model = SentenceTransformer('sergioburdisso/dialog2flow-single-bert-base')
     sentence_model = sentence_model.to(device)  # Move model to GPU if available
 
@@ -49,3 +60,9 @@ def prepare_data_for_sentence_embedding(tsv_file_path):
             all_sentences.append(sentences)
     return all_sentences
 
+if __name__ == '__main__':
+    args = arg_parser()
+    print("-----start-----")
+    print(f"tsv_file_path: {args.tsv_file_path}")
+    print(f"sentence_embedding_model: {args.sentence_embedding_model}")
+    compute_save_sentence_embedding(args.tsv_file_path, args.sentence_embedding_model)

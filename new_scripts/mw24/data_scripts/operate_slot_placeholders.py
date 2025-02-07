@@ -5,9 +5,9 @@ from tqdm import tqdm
 
 def arg_parse():
     parser = argparse.ArgumentParser(description='Modify the LLM input file for open ended generation.')
-    parser.add_argument('--input_file', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/experiments/NecessaryFiles/LLM_input_U_PY_TY_agent_added_n_limited_nn.txt', help='input file')
+    parser.add_argument('--input_file', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MW24/punct/MW24_MP_ST_PH-nm_SO_Labse_NN-10_UA_SV/MW24_MP_ST_PH-nm_SO_Labse_NN-10_UA_SV.txt', help='input file')
     parser.add_argument('--slot_placeholder', type=str, default='not mentioned', help='Slot placeholder to use if not "not mentioned"')
-    parser.add_argument('--output_file', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/experiments/NecessaryFiles/LLM_input_U_PY_TY_agent_added_n_limited_nn_rem_NA.txt', help='output file')
+    parser.add_argument('--output_file', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MW24/empt_slot_place/MW24_MP_ST_PH-NA_SO_Labse_NN-10_UA_SV/MW24_MP_ST_PH-NA_SO_Labse_NN-10_UA_SV.txt', help='output file')
     args = parser.parse_args()
     return args
 

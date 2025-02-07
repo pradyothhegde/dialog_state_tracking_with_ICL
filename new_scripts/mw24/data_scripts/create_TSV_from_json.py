@@ -12,6 +12,10 @@ def remove_punc(s):
     puncs = '!"#$%&()*+,./;<=>?@[\\]^_`{|}~' 
     return s.translate(str.maketrans('', '', puncs))
 
+def complete_punctuation_removal_and_lowercase(s): # Removes punctuation from a given string and converts to lowercase
+    puncs = '!"#$%&()*+,./:;<=>?@[\\]^_`{|}~' # Define punctuation characters
+    return s.translate(str.maketrans('', '', puncs)).lower() # Remove punctuation characters from the string and convert to lowercase
+
 # Put Domain, Slots of train and test data in a TSV file. 
 def create_TSV_from_json(json_file_path, tsv_file_path, args):
     print('Creating TSV files...')
@@ -48,6 +52,7 @@ def create_TSV_from_json(json_file_path, tsv_file_path, args):
                     # # punctuation to user utterance operation
                     if punctuation == 'N':      # No punctuation
                         user_utterance = remove_punc(user_utterance)
+                        # user_utterance = complete_punctuation_removal_and_lowercase(user_utterance)
                         user_utterance = user_utterance.strip()
                     #     # pass
                     # elif punctuation == 'M':    # Model punctuation
@@ -97,6 +102,7 @@ def create_TSV_from_json(json_file_path, tsv_file_path, args):
                     # # punctuation to agent utterance operation
                     if punctuation == 'N':    # No punctuation
                         agent_utterance = remove_punc(agent_utterance)
+                        # agent_utterance = complete_punctuation_removal_and_lowercase(agent_utterance)
                         agent_utterance = agent_utterance.strip()
                     #     # pass
                     # elif punctuation == 'M':    # Model punctuation

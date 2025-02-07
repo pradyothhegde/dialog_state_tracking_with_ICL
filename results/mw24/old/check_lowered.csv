@@ -1,0 +1,2 @@
+folder_name,file_name,joint_accuracy,slot_error_rate,slot_total_ref,slot_total_hyp,slot_f1,slot_precision,slot_recall
+check,TOD_mw24_O7BI_SS_I2_U_10_PY_TY.json,4.896907216494779,74.77366741519914,42305,46632,69.39743863134976,0.6617773202950749,0.7294646022928715

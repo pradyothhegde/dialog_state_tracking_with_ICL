@@ -6,9 +6,9 @@ from tqdm import tqdm
 
 def arg_parse():
     parser = argparse.ArgumentParser(description='Sort and shuffle slot keys.')
-    parser.add_argument('--input_file', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/experiments/NecessaryFiles/LLM_input_U_PY_TY_agent_added_n_limited_nn.txt', help='input file')
+    parser.add_argument('--input_file', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MW24/punct/MW24_MP_ST_PH-nm_SO_Labse_NN-10_UA_SV/MW24_MP_ST_PH-nm_SO_Labse_NN-10_UA_SV.txt', help='input file')
     parser.add_argument('--seed', type=str, default='42', help='Seed for shuffling slot keys. Use "Y" for alphabetical sorting. Use "omit" to omit slot keys with "not mentioned" value.')
-    parser.add_argument('--output_file', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/experiments/NecessaryFiles/LLM_input_U_PY_TY_agent_added_n_limited_nn_sorted_shuffled.txt', help='output file')
+    parser.add_argument('--output_file', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MW24/slot_key_shuffle/MW24_MP_ST_PH-nm_SU3_Labse_NN-10_UA_SV/MW24_MP_ST_PH-nm_SU3_Labse_NN-10_UA_SV.txt', help='output file')
     args = parser.parse_args()
     return args
 

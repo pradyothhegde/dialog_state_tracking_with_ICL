@@ -23,7 +23,7 @@ a = torch.rand(1, 1).cuda()
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_name', type=str, default='allenai/OLMo-7B-Instruct', help='model name')  # allenai/OLMo-7B-Instruct | mistralai/Mistral-7B-Instruct-v0.3
-    parser.add_argument('--output_folder_path', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/experiments/mw24/punct/')
+    parser.add_argument('--output_folder_path', type=str, default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/experiments/mw24/mistrals/')
     parser.add_argument('--out_folder_prefix', type=str, default='DST_')
 
     parser.add_argument('--input_file', type=str,       default='/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MW24/baseline/MW24_OP_ST_PH-empty_SU_Labse_NN-3_U_SV/MW24_OP_ST_PH-empty_SU_Labse_NN-3_U_SV.txt', help='The input file to LLM')

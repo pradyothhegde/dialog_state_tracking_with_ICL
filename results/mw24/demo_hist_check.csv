@@ -1,0 +1,2 @@
+folder_name,file_name,joint_accuracy,slot_error_rate,slot_total_ref,slot_total_hyp,slot_f1,slot_precision,slot_recall
+demo_hist_check,O7BI_MW24_MP_ST_PH-nm_SO_Labse_NN-3_U_SV.json,4.0718562874250885,70.10847000207598,38536,44676,75.54679613019985,0.7035544811531903,0.8156528959933547

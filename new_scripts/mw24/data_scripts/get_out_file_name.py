@@ -18,6 +18,8 @@ def get_out_file_name(args):
 
     if speaker_tag == "Y":
         speaker_tag_ret = "ST"
+    elif speaker_tag == "D":
+        speaker_tag_ret = "STD"
     else:
         speaker_tag_ret = "NST"
 

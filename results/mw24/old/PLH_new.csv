@@ -1,0 +1,2 @@
+folder_name,file_name,joint_accuracy,slot_error_rate,slot_total_ref,slot_total_hyp,slot_f1,slot_precision,slot_recall
+PLH_new,O7BI_MW24_MP_ST_PH-none_SO_Labse_NN-10_U_SV.json,5.086814975583219,62.0919513059922,42305,45441,76.40006381557922,0.737637816069187,0.7923176929440945

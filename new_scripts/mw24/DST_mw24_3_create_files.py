@@ -15,7 +15,7 @@ from data_scripts.get_out_file_name import get_out_file_name
 from data_scripts.create_TSV_from_json import create_TSV_from_json
 from data_scripts.compute_save_sentence_embedding import compute_save_sentence_embedding
 from data_scripts.check_context_token_limit import check_context_token_limit
-from data_scripts.remove_speaker_tags import remove_speaker_tags
+from data_scripts.remove_speaker_tags import remove_speaker_tags, add_dialog_at_the_start
 from data_scripts.operate_slot_placeholders import operate_slot_placeholders  # Import the function
 from data_scripts.sort_slot_keys import sort_and_shuffle_slot_keys  # Import the function
 
@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument("--LLM_model_tokenizer_limit", type=int, default=2048, help="Maximum window length of tokenizer - 2048 | ")
 
     parser.add_argument("--punct", type=str, default="O", help="Original - O | No punctuation - N | Model punctuation - M")
-    parser.add_argument("--speaker_tag", type=str, default="Y", help="Y or N")
+    parser.add_argument("--speaker_tag", type=str, default="Y", help="Y | N | D (dialog)")
     parser.add_argument("--slot_placeholder", type=str, default="not mentioned", help="not mentioned | N.A. | empty("") | omit") 
     parser.add_argument("--slot_key_sort", type=str, default="Y", help="Y | N | seed number")
 
@@ -85,12 +85,12 @@ def main():
     # exit()
 
     # create numpy files
-    test_numpy_file_path = compute_save_sentence_embedding(test_TSV_file_path)
-    train_numpy_file_path = compute_save_sentence_embedding(train_TSV_file_path)
+    test_numpy_file_path = compute_save_sentence_embedding(test_TSV_file_path, args.sentence_embedding_model)
+    train_numpy_file_path = compute_save_sentence_embedding(train_TSV_file_path, args.sentence_embedding_model)
 
     # Temporary paths
-    # test_numpy_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_test_U_O.npy'
-    # train_numpy_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_train_U_O.npy'
+    # test_numpy_file_path = os.path.join(output_folder_path, f"MW24_test_{args.dialog_history}_{args.punct}P.npy")
+    # train_numpy_file_path = os.path.join(output_folder_path, f"MW24_train_{args.dialog_history}_{args.punct}P.npy")
     # test_TSV_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_test_U_O.tsv'
     # train_TSV_file_path = '/mnt/matylda4/hegde/int_ent/TOD_llm/dialog_state_tracking/data/MULTIWOZ2.4/processed_data/MW24_OP_ST_PH-nm_SO_Labse_NN-10_U_SKV/MW24_train_U_O.tsv'
 
@@ -197,6 +197,8 @@ def main():
         # Remove User: Agent: speaker tags.
         # remove_speaker_tags
         processed_file_path = remove_speaker_tags(output_file_name, output_file_name)
+    elif args.speaker_tag == 'D':
+        processed_file_path = add_dialog_at_the_start(output_file_name, output_file_name)
     print("speaker_tags processed")
     sleep(5)
 

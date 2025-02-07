@@ -31,6 +31,10 @@ def punctuate_and_segment_texts(input_texts: List[str]) -> List[List[str]]:
 
 def repunctuate_tsv(input_file): # Main function to process the TSV file
 
+    m: PunctCapSegModelONNX = PunctCapSegModelONNX.from_pretrained(
+        "1-800-BAD-CODE/xlm-roberta_punctuation_fullstop_truecase"
+    )
+
     with open(input_file, 'r', encoding='utf-8') as infile: # Open input file
         lines = [] # Initialize an empty list to store lines
         for line in infile: # Read input file line by line
@@ -48,7 +52,8 @@ def repunctuate_tsv(input_file): # Main function to process the TSV file
 
         # remove punctuation
         texts_to_punctuate = [remove_punc(replace_unk_to_dash(text)) for text in texts_to_punctuate] # Remove punctuations from text
-        punctuated_results = punctuate_and_segment_texts(texts_to_punctuate) # Punctuate the texts
+        # punctuated_results = punctuate_and_segment_texts(texts_to_punctuate) # Punctuate the texts
+        punctuated_results = m.infer(texts=texts_to_punctuate, apply_sbd=True)
 
         punctuated_texts = [] # Initialize an empty list to store punctuated lines
         index = 0 # Initialize index to keep track of results
