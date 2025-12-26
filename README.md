@@ -1,4 +1,4 @@
-# dialog_state_tracking
+# dialog_state_tracking_with_ICL
 
 Following folders contain these things:
 
